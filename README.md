@@ -1,58 +1,107 @@
-# Sample Hardhat 3 Beta Project (`mocha` and `ethers`)
+🎓 HỆ THỐNG QUẢN LÝ & XÁC THỰC VĂN BẰNG TRÊN BLOCKCHAIN (CRONOS)
+Tác giả: [Trần Huỳnh Sang] Mô tả: Ứng dụng phi tập trung (DApp) giúp các trường đại học cấp bằng và doanh nghiệp tra cứu văn bằng minh bạch, chống giả mạo bằng công nghệ Blockchain.
 
-This project showcases a Hardhat 3 Beta project using `mocha` for tests and the `ethers` library for Ethereum interactions.
+🛠 1. Công Cụ & Công Nghệ Sử Dụng
+Hệ thống được xây dựng theo mô hình 3 lớp (3-Tier Architecture):
 
-To learn more about the Hardhat 3 Beta, please visit the [Getting Started guide](https://hardhat.org/docs/getting-started#getting-started-with-hardhat-3). To share your feedback, join our [Hardhat 3 Beta](https://hardhat.org/hardhat3-beta-telegram-group) Telegram group or [open an issue](https://github.com/NomicFoundation/hardhat/issues/new) in our GitHub issue tracker.
+Blockchain (Lớp dữ liệu):
 
-## Project Overview
+Mạng lưới: Cronos Testnet (EVM Compatible).
 
-This example project includes:
+Ngôn ngữ: Solidity (Viết Smart Contract).
 
-- A simple Hardhat configuration file.
-- Foundry-compatible Solidity unit tests.
-- TypeScript integration tests using `mocha` and ethers.js
-- Examples demonstrating how to connect to different types of networks, including locally simulating OP mainnet.
+Framework: Hardhat (Biên dịch & Triển khai hợp đồng).
 
-## Usage
+Ví: MetaMask (Quản lý tài khoản & Phí Gas).
 
-### Running Tests
+Backend (Lớp xử lý):
 
-To run all the tests in the project, execute the following command:
+Ngôn ngữ: Python.
 
-```shell
-npx hardhat test
-```
+Thư viện chính: Flask (Tạo API Server), Web3.py (Kết nối Blockchain).
 
-You can also selectively run the Solidity or `mocha` tests:
+Frontend (Lớp giao diện):
 
-```shell
-npx hardhat test solidity
-npx hardhat test mocha
-```
+Ngôn ngữ: HTML5, CSS3, Javascript (Vanilla).
 
-### Make a deployment to Sepolia
+Thư viện: SweetAlert2 (Thông báo đẹp), html2canvas & jspdf (Xuất file PDF).
 
-This project includes an example Ignition module to deploy the contract. You can deploy this module to a locally simulated chain or to Sepolia.
+🚀 2. Quy Trình Thực Hiện (Step-by-Step)
+Chúng ta đã xây dựng dự án qua 3 giai đoạn chính:
 
-To run the deployment to a local chain:
+Giai đoạn 1: Xây dựng "Trái Tim" (Smart Contract)
+Mục tiêu: Tạo ra một "cuốn sổ cái" không thể tẩy xóa để lưu thông tin văn bằng.
 
-```shell
-npx hardhat ignition deploy ignition/modules/Counter.ts
-```
+Cách làm:
 
-To run the deployment to Sepolia, you need an account with funds to send the transaction. The provided Hardhat configuration includes a Configuration Variable called `SEPOLIA_PRIVATE_KEY`, which you can use to set the private key of the account you want to use.
+Viết file BangCap.sol bằng ngôn ngữ Solidity.
 
-You can set the `SEPOLIA_PRIVATE_KEY` variable using the `hardhat-keystore` plugin or by setting it as an environment variable.
+Định nghĩa cấu trúc Bang gồm: Tên SV, Mã SV, Loại bằng, Ngày cấp, Người cấp.
 
-To set the `SEPOLIA_PRIVATE_KEY` config variable using `hardhat-keystore`:
+Sử dụng mapping để gán mỗi văn bằng với một mã Hash độc nhất.
 
-```shell
-npx hardhat keystore set SEPOLIA_PRIVATE_KEY
-```
+Triển khai (Deploy) lên mạng Cronos Testnet bằng Hardhat.
 
-After setting the variable, you can run the deployment with the Sepolia network:
+Kết quả: Có được địa chỉ hợp đồng (Contract Address) để giao tiếp.
 
-```shell
-npx hardhat ignition deploy --network sepolia ignition/modules/Counter.ts
-```
-# BlockChain_VanBang
+Giai đoạn 2: Xây dựng "Cầu Nối" (Python Backend)
+Mục tiêu: Giúp máy tính giao tiếp được với Blockchain (vì trình duyệt web không làm trực tiếp việc này an toàn).
+
+Cách làm:
+
+Cấu hình môi trường (.env) chứa Private Key và Contract Address.
+
+Dùng Web3.py để kết nối tới RPC của Cronos.
+
+Tạo API /cap-bang: Nhận thông tin -> Ký giao dịch bằng Private Key -> Gửi lên Blockchain.
+
+Tạo API /tra-cuu: Nhận mã Hash -> Đọc dữ liệu từ Blockchain -> Trả về JSON.
+
+Giai đoạn 3: Xây dựng "Giao Diện" (Frontend Web)
+Mục tiêu: Tạo trang web thân thiện cho người dùng (Admin và Sinh viên/Nhà tuyển dụng).
+
+Cách làm:
+
+Thiết kế giao diện 2 Tab: Tra Cứu và Admin.
+
+Chức năng Tra Cứu: Nhập mã Hash -> Gọi API Python -> Hiển thị tấm bằng Visual đẹp mắt.
+
+Chức năng Admin: Nhập thông tin -> Gọi API Python để cấp bằng mới -> Lưu lịch sử vào LocalStorage.
+
+Tính năng nâng cao: Tích hợp xuất bằng ra file PDF chuẩn A4.
+
+🌟 3. Các Tính Năng Nổi Bật
+Chống giả mạo tuyệt đối: Dữ liệu nằm trên Blockchain, hacker không thể sửa điểm hay ngày cấp.
+
+Minh bạch: Bất kỳ ai có mã Hash đều có thể kiểm tra nguồn gốc văn bằng.
+
+Giao diện trực quan: Mô phỏng tấm bằng thực tế thay vì chỉ hiện dòng chữ khô khan.
+
+Xuất PDF chuẩn: Hỗ trợ tải văn bằng về máy để in ấn với độ nét cao.
+
+Thông báo thông minh: Hệ thống phản hồi tức thì (Loading, Thành công, Thất bại) giúp người dùng dễ thao tác.
+
+📖 4. Hướng Dẫn Cài Đặt & Chạy
+Để chạy dự án này trên máy local, làm theo các bước sau:
+
+Bước 1: Khởi động Backend Mở Terminal tại thư mục Python-App và chạy lệnh:
+
+Bash
+
+python api.py
+(Hoặc click đúp file START.bat nếu đã tạo). Server sẽ chạy tại: http://127.0.0.1:5000
+
+Bước 2: Mở Giao diện
+
+Vào thư mục Python-App.
+
+Mở file index.html bằng trình duyệt Chrome/Edge.
+
+Bước 3: Sử dụng
+
+Cấp bằng: Vào tab Admin, điền thông tin -> Bấm Cấp bằng -> Copy mã Hash.
+
+Kiểm tra: Vào tab Tra cứu, dán mã Hash -> Xem kết quả -> Tải PDF.
+
+📝 5. Tổng Kết
+Dự án đã chứng minh khả năng ứng dụng thực tế của Blockchain trong giáo dục. Từ những dòng code Solidity đầu tiên đến một giao diện web hoàn chỉnh, hệ thống đảm bảo tính: Toàn vẹn dữ liệu - Bảo mật - Dễ sử dụng.
