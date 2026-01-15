@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Quản Lý Văn Bằng Blockchain</title>
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        :root { --primary: #002d72; --gold: #c5a017; --bg: #f4f7f6; }
+        body {
+            font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0;
+            display: flex; justify-content: center; min-height: 100vh; padding: 20px;
+        }
+        .container {
+            background: white; width: 800px; border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); overflow: hidden; display: flex; flex-direction: column;
+        }
+        /* Tab Navigation */
+        .tabs { display: flex; background: #e0e0e0; }
+        .tab-btn {
+            flex: 1; padding: 20px; border: none; background: #e0e0e0; cursor: pointer;
+            font-weight: bold; font-size: 16px; color: #555; transition: 0.3s;
+        }
+        .tab-btn.active { background: white; color: var(--primary); border-top: 4px solid var(--primary); }
+        .tab-btn:hover:not(.active) { background: #dcdcdc; }
+
+        /* Content Area */
+        .content { padding: 30px; display: none; animation: fadeIn 0.4s; }
+        .content.active { display: block; }
+
+        /* Form Elements */
+        .input-group { margin-bottom: 20px; }
+        label { font-weight: 600; color: #333; display: block; margin-bottom: 8px; }
+        input, select {
+            width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 15px;
+            box-sizing: border-box;
+        }
+        .btn {
+            width: 100%; padding: 14px; border: none; border-radius: 6px; font-size: 16px; font-weight: bold;
+            cursor: pointer; transition: 0.2s; color: white; display: flex; align-items: center; justify-content: center; gap: 10px;
+        }
+        .btn-search { background: var(--primary); }
+        .btn-mint { background: var(--gold); color: #fff; text-shadow: 0 1px 1px rgba(0,0,0,0.2); }
+        .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+
+        /* GIAO DIỆN TẤM BẰNG */
+        #certificateView { display: none; margin-top: 30px; position: relative; }
+        .certificate-border {
+            border: 10px solid var(--primary); padding: 5px; position: relative; background: #fff;
+        }
+        .certificate-inner {
+            border: 2px solid var(--gold); padding: 40px; text-align: center;
+            font-family: Arial, Helvetica, sans-serif; /* Font chuẩn không lỗi dấu */
+            background-image: radial-gradient(circle at center, #fff 0%, #f9f9f9 100%);
+        }
+        .cert-title { font-size: 32px; font-weight: bold; color: var(--primary); text-transform: uppercase; margin: 0 0 10px 0; letter-spacing: 2px; }
+        .cert-subtitle { font-size: 18px; color: #555; margin-bottom: 30px; font-style: italic; }
+        .cert-name { font-size: 40px; font-weight: bold; color: #000; margin: 20px 0; font-family: 'Times New Roman', serif; }
+        .cert-info { font-size: 18px; line-height: 1.6; color: #333; }
+        .cert-footer { margin-top: 40px; display: flex; justify-content: space-between; align-items: flex-end; }
+        .cert-sign { text-align: center; }
+        .cert-sign h4 { margin: 50px 0 5px 0; border-top: 1px solid #333; padding-top: 10px; width: 200px; }
+        .badge-icon { font-size: 60px; color: var(--gold); margin-bottom: 10px; }
+
+        /* LỊCH SỬ */
+        .history-table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }
+        .history-table th, .history-table td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        .history-table th { background: #f8f9fa; color: var(--primary); }
+        .status-badge { background: #e6ffed; color: green; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; border: 1px solid #b7eb8f; }
+
+        .download-btn { background: #e74c3c; margin-top: 20px; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('search')"><i class="fas fa-search"></i> TRA CỨU</button>
+        <button class="tab-btn" onclick="switchTab('admin')"><i class="fas fa-user-shield"></i> QUẢN TRỊ (ADMIN)</button>
+    </div>
+
+    <div id="tab-search" class="content active">
+        <div class="input-group">
+            <label>Nhập Mã Số Văn Bằng (Hash):</label>
+            <input type="text" id="searchHash" placeholder="Ví dụ: 0x123abc...">
+        </div>
+        <button class="btn btn-search" onclick="traCuuBang()">🔍 Kiểm Tra Ngay</button>
+
+        <div id="certificateView">
+            <div id="certCapture" class="certificate-border">
+                <div class="certificate-inner">
+                    <i class="fas fa-certificate badge-icon"></i>
+                    <div class="cert-title">Bằng Tốt Nghiệp Đại Học</div>
+                    <div class="cert-subtitle">Công nhận danh hiệu Kỹ Sư Công Nghệ Thông Tin cho:</div>
+                    
+                    <div class="cert-name" id="outName">NGUYEN VAN A</div>
+                    
+                    <div class="cert-info">
+                        Xếp loại: <b id="outRank" style="color: var(--primary)">Xuất Sắc</b><br>
+                        Mã Sinh Viên: <span id="outID">SV2026</span>
+                    </div>
+
+                    <div class="cert-footer">
+                        <div style="text-align: left; font-size: 12px; color: #777;">
+                            <b>Xác thực bởi Blockchain:</b><br>
+                            Hash: <span id="outHashDisplay">0x...</span><br>
+                            Ngày cấp: <span id="outDate">15/01/2026</span>
+                        </div>
+                        <div class="cert-sign">
+                            <div style="font-family: 'Cursive', cursive; font-size: 20px; color: var(--primary)">Admin Signature</div>
+                            <h4>HIỆU TRƯỞNG</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="btn download-btn" onclick="taiPDF()">
+                <i class="fas fa-file-pdf"></i> Tải Về PDF (Bản Gốc)
+            </button>
+        </div>
+    </div>
+
+    <div id="tab-admin" class="content">
+        <h3><i class="fas fa-pen-nib"></i> Cấp Văn Bằng Mới</h3>
+        <div class="input-group">
+            <label>Họ Tên Sinh Viên:</label>
+            <input type="text" id="inName" placeholder="Nguyen Van B">
+        </div>
+        <div class="input-group">
+            <label>Mã Sinh Viên:</label>
+            <input type="text" id="inID" placeholder="SV...">
+        </div>
+        <div class="input-group">
+            <label>Xếp Loại:</label>
+            <select id="inRank">
+                <option value="Xuat Sac">Xuất Sắc</option>
+                <option value="Gioi">Giỏi</option>
+                <option value="Kha">Khá</option>
+            </select>
+        </div>
+        <button class="btn btn-mint" onclick="capBangMoi()">⚡ Ký & Lưu Lên Blockchain</button>
+
+        <h3 style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">
+            <i class="fas fa-history"></i> Lịch Sử Cấp Bằng (Gần đây)
+        </h3>
+        <table class="history-table">
+            <thead>
+                <tr>
+                    <th>Sinh Viên</th>
+                    <th>Mã Hash (Click để copy)</th>
+                    <th>Trạng thái</th>
+                </tr>
+            </thead>
+            <tbody id="historyList"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const API_URL = "http://127.0.0.1:5000";
+
+    // --- FIX LỖI TẢI PDF (FINAL) ---
+    function taiPDF() {
+        const element = document.getElementById("certCapture");
+        
+        // Hiện thông báo đang xử lý
+        Swal.fire({
+            title: 'Đang tạo file PDF...',
+            text: 'Vui lòng đợi 3 giây...',
+            allowOutsideClick: false,
+            didOpen: () => { Swal.showLoading() }
+        });
+
+        setTimeout(() => {
+            // Cấu hình chụp ảnh
+            html2canvas(element, { 
+                scale: 1.5,
+                backgroundColor: '#ffffff',
+                useCORS: false // Tắt cái này để tránh lỗi bảo mật
+            }).then(canvas => {
+                try {
+                    // --- DÒNG QUAN TRỌNG NHẤT ĐỂ FIX LỖI "jsPDF is not defined" ---
+                    const { jsPDF } = window.jspdf; 
+                    // -------------------------------------------------------------
+
+                    const imgData = canvas.toDataURL('image/png');
+                    const pdfWidth = 297; // A4 Ngang
+                    const pdfHeight = 210;
+                    const pdf = new jsPDF('l', 'mm', 'a4');
+
+                    const imgProps = pdf.getImageProperties(imgData);
+                    const ratio = Math.min(pdfWidth / imgProps.width, pdfHeight / imgProps.height);
+                    
+                    const newWidth = imgProps.width * ratio;
+                    const newHeight = imgProps.height * ratio;
+                    const x = (pdfWidth - newWidth) / 2;
+                    const y = (pdfHeight - newHeight) / 2;
+
+                    pdf.addImage(imgData, 'PNG', x, y, newWidth, newHeight);
+                    pdf.save("Bang-Tot-Nghiep-Blockchain.pdf");
+                    
+                    Swal.fire({ icon: 'success', title: 'Tải thành công!', timer: 2000, showConfirmButton: false });
+                } catch (err) {
+                    console.error(err);
+                    Swal.fire('Lỗi', 'Chi tiết lỗi: ' + err.message, 'error');
+                }
+            }).catch(err => {
+                Swal.fire('Lỗi Chụp Ảnh', 'Không thể chụp màn hình. Hãy tải lại trang!', 'error');
+            });
+        }, 500);
+    }
+
+    // --- CÁC CHỨC NĂNG KHÁC (GIỮ NGUYÊN) ---
+    function switchTab(tab) {
+        document.querySelectorAll('.content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById('tab-' + tab).classList.add('active');
+        event.currentTarget.classList.add('active');
+        if(tab === 'admin') loadHistory();
+    }
+
+    async function traCuuBang() {
+        let hash = document.getElementById("searchHash").value.trim();
+        const view = document.getElementById("certificateView");
+        if (!hash) return Swal.fire('Thông báo', 'Vui lòng nhập mã Hash!', 'info');
+        if (!hash.startsWith("0x")) hash = "0x" + hash;
+
+        Swal.fire({ title: 'Đang tìm kiếm...', didOpen: () => Swal.showLoading() });
+
+        try {
+            const res = await fetch(`${API_URL}/tra-cuu/${hash}`);
+            const data = await res.json();
+            
+            if (data.status === "success") {
+                Swal.close();
+                document.getElementById("outName").innerText = data.sinh_vien;
+                document.getElementById("outRank").innerText = data.loai_bang;
+                document.getElementById("outID").innerText = data.ma_sv;
+                document.getElementById("outHashDisplay").innerText = hash.substring(0, 20) + "...";
+                document.getElementById("outDate").innerText = new Date(data.ngay_cap * 1000).toLocaleDateString('vi-VN');
+                view.style.display = "block"; 
+            } else {
+                Swal.fire({ icon: 'error', title: 'Không tìm thấy!', text: 'Mã văn bằng này không tồn tại.' });
+                view.style.display = "none";
+            }
+        } catch (e) { Swal.fire('Lỗi kết nối', 'Không thể kết nối Server!', 'error'); }
+    }
+
+    async function capBangMoi() {
+        const ten = document.getElementById("inName").value;
+        const masv = document.getElementById("inID").value;
+        const loai = document.getElementById("inRank").value;
+        if (!ten || !masv) return Swal.fire('Thiếu thông tin', 'Điền đủ tên và mã SV!', 'warning');
+
+        Swal.fire({ title: 'Đang ghi Blockchain...', didOpen: () => Swal.showLoading() });
+
+        try {
+            const res = await fetch(`${API_URL}/cap-bang`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ ten_sv: ten, ma_sv: masv, loai_bang: loai })
+            });
+            const data = await res.json();
+
+            if (data.status === "success") {
+                saveToHistory(ten, data.ma_hash_bang);
+                loadHistory(); 
+                document.getElementById("inName").value = "";
+                document.getElementById("inID").value = "";
+                Swal.fire({
+                    title: 'THÀNH CÔNG!',
+                    html: `Mã Hash: <br><b style="color:blue">${data.ma_hash_bang}</b>`,
+                    icon: 'success'
+                });
+            } else { Swal.fire('Thất bại', data.message, 'error'); }
+        } catch (e) { Swal.fire('Lỗi', 'Lỗi Server!', 'error'); }
+    }
+
+    function saveToHistory(name, hash) {
+        let history = JSON.parse(localStorage.getItem("certHistory") || "[]");
+        history.unshift({ name, hash, date: new Date().toLocaleString() }); 
+        localStorage.setItem("certHistory", JSON.stringify(history));
+    }
+
+    function loadHistory() {
+        let history = JSON.parse(localStorage.getItem("certHistory") || "[]");
+        const list = document.getElementById("historyList");
+        list.innerHTML = "";
+        history.forEach(item => {
+            list.innerHTML += `<tr>
+                <td><b>${item.name}</b><br><small>${item.date}</small></td>
+                <td style="font-family:monospace; color:blue; cursor:pointer;" onclick="navigator.clipboard.writeText('${item.hash}'); Swal.fire({toast:true, position:'top-end', icon:'success', title:'Đã copy!', timer:1000, showConfirmButton:false})">${item.hash.substring(0, 15)}...</td>
+                <td><span class="status-badge">Đã cấp</span></td>
+            </tr>`;
+        });
+    }
+</script>
+
+</body>
+</html>
